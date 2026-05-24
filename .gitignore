@@ -117,3 +117,17 @@ app.*.symbols
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
+
+# ftree-specific
+# Legacy Android source kept locally as migration reference; not part of the repo.
+cheleri.zip
+cheleri_extracted/
+
+# Local Claude Code settings (project-shared settings.json IS committed)
+.claude/settings.local.json
+
+# Superpowers brainstorming session artifacts (ephemeral)
+.superpowers/
+
+# macOS
+.DS_Store
