@@ -31,7 +31,7 @@ The motivation is twofold:
 - Cross-family edits use a time-bounded consensus model with visible `*` indicator for unresolved approvals
 - Migrate the existing 1,499 Cheleri individuals as Day-1 seed data
 - Modern UI ("Heritage Warm" palette: cream + walnut + antique gold)
-- Phone OTP authentication (free via Firebase Auth) with email fallback
+- Email link (passwordless) authentication via Firebase Auth — user enters email, receives a sign-in link, taps it to log in. Phone OTP deferred to a later phase.
 - Real-time updates across devices (edits propagate live)
 - Photo uploads per member
 - Search by name across the whole graph
@@ -62,7 +62,7 @@ Selected over React Native because:
 | Component | Service | Free-tier coverage at MVP scale |
 |---|---|---|
 | Database | **Firestore** (NoSQL document store) | 50k reads/day, 20k writes/day, 1 GiB storage |
-| Auth | **Firebase Auth** (phone OTP + email) | Phone OTP free, email free |
+| Auth | **Firebase Auth** (email link / passwordless) | Email link free, unlimited |
 | Push | **Firebase Cloud Messaging (FCM)** | Free, unlimited |
 | Photos / files | **Firebase Cloud Storage** | 5 GB storage, 1 GB/day download |
 | Analytics | **Firebase Analytics** | Free, unlimited |
@@ -230,7 +230,7 @@ Permission enforcement is **Firestore Security Rules**, not app-side logic. Rule
 ### 6.1 Invite → onboard
 1. Family admin or super admin sends invite (phone or email) → creates `/invites/{id}` doc
 2. Recipient opens link → app deep-links into onboarding
-3. Phone OTP / email magic link verifies identity → creates `/users/{uid}`
+3. Email link (passwordless sign-in) verifies identity → creates `/users/{uid}`
 4. Optional: link to existing `personId` if the new user matches a person in the tree
 5. Land on home screen showing their family's tree first
 
@@ -263,7 +263,7 @@ Permission enforcement is **Firestore Security Rules**, not app-side logic. Rule
 4. FCM push notifies the other family's admins
 5. Each affected admin approves or rejects in-app
 6. **All approve before deadline** → `consensusFlags` cleared on the marriage doc, `*` removed
-7. **Any reject** *(assumption: not explicitly confirmed in brainstorming — please verify during plan review)* → edit reverts to the previous value (read from `/audit`), super admin gets a notification with both versions for arbitration
+7. **Any reject** → edit enters a `disputed` state: it is neither cleared (`consensusFlags` remain → `*` stays) nor reverted. Super admin is notified with both versions and must explicitly decide to apply or revert. The proposing admin cannot make further edits on the same field until the dispute is resolved. This keeps in-progress data intact while preventing controversial edits from sticking unilaterally.
 8. **Deadline passes with no action** → `consensusFlags` remain indefinitely; `*` stays visible. Either admin can still act on it later to clear or reject.
 9. Tapping the `*` opens a sheet showing: edit details, who proposed, when, who's still pending, deadline (if any), and the original vs new value
 
@@ -376,7 +376,7 @@ For the MVP, verification means:
 | Cross-family edits | Time-bounded consensus (7-day default), `*` flag, super-admin arbitration |
 | Seed data | Migrate existing Cheleri SQLite (1,499 individuals) |
 | Backend | Firebase (Firestore + Auth + FCM + Cloud Storage) |
-| Auth | Phone OTP (primary) + email (fallback) |
+| Auth | Email link (passwordless, primary); phone OTP deferred |
 | Privacy | Open inside invite gate, **except DOB hidden from viewers** |
 | Visual style | Heritage Warm (cream + walnut + antique gold) |
 | Tree visualization | Profile-centric primary; zoomable canvas secondary; indented list on wide layouts |
